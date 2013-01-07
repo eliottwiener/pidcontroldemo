@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf8"/>
+<html>
+<head>
+	<title>PID Control Demo</title>
+	<link rel="stylesheet" href="style.css" type="text/css" media="all"/>
+	<script src="pid.js" type="text/javascript"></script>
+</head>
+<body>
+<div>
+	P
+	<input type="text" id="pbox"/>
+	I
+	<input type="text" id="ibox"/>
+	D
+	<input type="text" id="dbox"/>
+	Freq
+	<input type="text" id="fbox"/>
+	<button onClick="window.updateVars();">Update Variables</button>
+</div>
+<div>
+	<canvas id="cnvs" style="position: relative;"></canvas>
+</div>
+</body>
+</html>
+
