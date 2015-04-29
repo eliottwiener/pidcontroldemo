@@ -17,57 +17,63 @@
 */
 (function() {
 	"use strict";
-	var ball_position, ball_velocity, cnvs, control_loop, copy_2vector, ctx, derivative_gain, draw, error, freq, integral_gain, last_error, mouse, past_errors, proportional_gain, setpoint, sum_error, update_mouse, update_vars, winch, world_tick;
 
 	// default parameter values
-	proportional_gain = .2;
-	integral_gain = .15;
-	derivative_gain = .03;
-	freq = 15;
+	var proportional_gain = .2;
+	var integral_gain = .15;
+	var derivative_gain = .03;
+	var freq = 15;
 
-	ctx = {};
+	var ctx;
+	var cnvs;
+	var cnvs_size = function(dim){
+		if(dim === 'x'){
+			return cnvs.width;
+		} else if(dim === 'y'){
+			return cnvs.height;
+		}
+	}
 
-	cnvs = {};
-
-	setpoint = {
+	var setpoint = {
 		'x': 0,
 		'y': 0
 	};
 
-	mouse = {
+	var mouse = {
 		'x': 0,
 		'y': 0
 	};
 
-	ball_position = {
+	var ball_position = {
 		'x': 0,
 		'y': 0
 	};
 
-	ball_velocity = {
+	var ball_velocity = {
 		'x': 0,
 		'y': 0
 	};
 
-	error = {
+	var error = {
 		'x': 0,
 		'y': 0
 	};
 
-	last_error = {
+	var last_error = {
 		'x': 0,
 		'y': 0
 	};
 
-	sum_error = {
+	var sum_error = {
 		'x': 0,
 		'y': 0
 	};
 
-	past_errors = [];
+	var past_errors = [];
 
-	update_mouse = function(e) {
-		var x, y;
+	var update_mouse = function(e) {
+		var x = 0;
+		var y = 0;
 		if (e.offsetX) {
 			x = e.offsetX;
 			y = e.offsetY;
@@ -75,61 +81,58 @@
 			x = e.layerX;
 			y = e.layerY;
 		}
-		return mouse = {
+		mouse = {
 			'x': x,
 			'y': y
 		};
 	};
 
-	copy_2vector = function(v) {
+	var copy_2vec = function(v) {
 		return {
 			'x': v.x,
 			'y': v.y
 		};
 	};
 
-	control_loop = function() {
-		var dim, error_slope, velocity, _i, _len, _ref;
-		setpoint = copy_2vector(mouse);
-		_ref = ['x', 'y'];
-		for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-			dim = _ref[_i];
+	var control_loop = function() {
+		setpoint = copy_2vec(mouse);
+		['x', 'y'].forEach(function(dim){
 			error[dim] = setpoint[dim] - ball_position[dim];
-			velocity = proportional_gain * error[dim];
+			var velocity = proportional_gain * error[dim];
 			sum_error[dim] += error[dim];
 			velocity += integral_gain * sum_error[dim];
-			error_slope = error[dim] - last_error[dim];
+			var error_slope = error[dim] - last_error[dim];
 			velocity += derivative_gain * error_slope;
 			ball_velocity[dim] = velocity;
 			last_error[dim] = error[dim];
-		}
-		past_errors.unshift(copy_2vector(error));
-		if (past_errors.length > cnvs.width) {
+		});
+
+		// keep these for charting
+		past_errors.unshift(copy_2vec(error));
+		if (past_errors.length > cnvs.width && past_errors.length > cnvs.height) {
 			past_errors.pop();
 		}
-		return setTimeout(control_loop, 1000 / freq);
+
+		setTimeout(control_loop, 1000 / freq);
 	};
 
-	world_tick = function() {
-		ball_position.x += ball_velocity.x;
-		ball_position.y += ball_velocity.y;
-		if (ball_position.y > cnvs.height) {
-			ball_position.y = cnvs.height;
-		}
-		if (ball_position.x > cnvs.width) {
-			ball_position.x = cnvs.width;
-		}
-		if (ball_position.x < 0) {
-			ball_position.x = 0;
-		}
-		if (ball_position.y < 0) {
-			ball_position.y = 0;
-		}
+	var world_tick = function() {
+		['x','y'].forEach(function(dim){
+			ball_position[dim] += ball_velocity[dim];
+
+			// keep ball in bounds
+			if (ball_position[dim] > cnvs_size(dim)) {
+				ball_position[dim] = cnvs_size(dim);
+			}
+			if (ball_position[dim] < 0) {
+				ball_position[dim] = 0;
+			}
+		});
 		draw();
-		return window.requestAnimationFrame(world_tick);
+		window.requestAnimationFrame(world_tick);
 	};
 
-	draw = function() {
+	var draw = function() {
 		var e, offset, _i, _j, _len, _len1;
 
 		ctx.clearRect(0, 0, cnvs.width, cnvs.height);
@@ -174,10 +177,7 @@
 		return ctx.stroke();
 	};
 
-	update_vars = function(e) {
-		if (e) {
-			e.preventDefault();
-		}
+	var update_vars = function() {
 		if (window.controls.checkValidity()) {
 			proportional_gain = window.pbox.value;
 			integral_gain = window.ibox.value;
@@ -215,10 +215,15 @@
 		}
 	};
 
-	winch = function() {
+	var submit = function(e) {
+		e.preventDefault()
+		update_vars()
+	}
+
+	var winch = function() {
 		cnvs.width = window.innerWidth;
 		cnvs.height = 500;
-		return update_vars(false);
+		update_vars();
 	};
 
 	window.onload = function() {
@@ -235,12 +240,8 @@
 		ball_position.x = cnvs.width / 2;
 		ball_position.y = cnvs.height / 2;
 		ctx = cnvs.getContext('2d');
-		cnvs.addEventListener('mousemove', function(e) {
-			return update_mouse(e);
-		});
-		window.controls.addEventListener("submit", function(e) {
-			return update_vars(e);
-		});
+		cnvs.addEventListener('mousemove', update_mouse)
+		window.controls.addEventListener("submit", submit);
 		window.addEventListener('resize', winch);
 		winch();
 		window.requestAnimationFrame(world_tick);

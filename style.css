@@ -18,27 +18,28 @@
 body {
 	font-family: sans-serif;
 	overflow-x: hidden;
+	margin: 0;
+	padding: 0;
 }
 #cnvs {
 	position: relative;
-	border: 1px black dotted;
+	display: block;
 }
-.param {
-	background-color: rgba(147, 128, 108, 0.1);
-	padding: 0.3em;
-	margin: 0.1em;
-	border-radius: 0.3em;
-}
-.param input {
-	width: 4em;
+.control input[type="number"] {
+	max-width: 4em;
 }
 #controls {
-	margin: 1em;
 	display: flex;
 	justify-content: space-around;
 	flex-wrap: wrap;
+	background-color: rgba(147, 128, 108, 0.1);
+	padding: 0.5em 0;
 }
 #description {
 	max-width: 40em;
-	padding: 1em;
+	margin: 0 auto;
+}
+#description-container {
+	background-color: rgba(108, 128, 147, 0.1);
+	padding: 0.3em;
 }

@@ -25,41 +25,47 @@
 </head>
 <body>
 	<header>
-		<p id="description">
-			This is a sandbox application where you can play with a
-			basic, manually-tuned
-			<a href="http://en.wikipedia.org/wiki/PID_controller">PID control loop</a>.
-			The goal of this control loop is to keep the red circle
-			as close as possible to the mouse pointer.
-			In other words,
-			the <b>setpoint</b> is defined as the mouse pointer's position,
-			and the <b>error</b> is defined as the distance between the red circle and the mouse pointer.
-			By tuning the PID gain coefficients,
-			the red circle's ability to follow the pointer can be enhanced.
-			Additionally, you can tune the frequency at which the control loop runs.
-			Charts of the X-axis error and Y-axis error are provided to help visualize the control loop's effectiveness.
-
-			<a href="https://github.com/eliottwiener/pidcontroldemo">
-			Source code available on GitHub</a>.
-		</p>
+		<div id="description-container">
+			<article id="description">
+				<p>
+					This is a sandbox application where you can play with a
+					basic, manually-tuned
+					<a href="https://en.wikipedia.org/wiki/PID_controller">PID control loop</a>.
+					The goal of this control loop is to keep the red circle
+					as close as possible to the mouse pointer.
+					In other words,
+					the <b>setpoint</b> is defined as the mouse pointer's position,
+					and the <b>error</b> is defined as the (directed) distance between the red circle and the mouse pointer.
+					By tuning the PID gain coefficients,
+					the red circle's ability to follow the pointer can be enhanced.
+					Additionally, you can tune the frequency at which the control loop runs.
+					Charts of the X-axis error and Y-axis error are provided to help visualize the control loop's effectiveness.
+				</p>
+				<p>
+					<a href="https://github.com/eliottwiener/pidcontroldemo">
+						Source code available on GitHub
+					</a>
+				</p>
+			</article>
+		</div>
 		<form id="controls">
-			<div class="param">
+			<div class="control">
 				<label>Proportional gain:</label>
 				<input type="number" id="pbox" step=".01" required />
 			</div>
-			<div class="param">
+			<div class="control">
 				<label>Integral gain:</label>
 				<input type="number" id="ibox" step=".01" required />
 			</div>
-			<div class="param">
+			<div class="control">
 				<label>Derivative gain:</label>
 				<input type="number" id="dbox" step=".01" required />
 			</div>
-			<div class="param">
+			<div class="control">
 				<label>Control loop frequency (Hz):</label>
 				<input type="number" id="fbox" required />
 			</div>
-			<div class="param">
+			<div class="control">
 				<input id="submit" type="submit" value="Update parameters" />
 			</div>
 		</form>
