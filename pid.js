@@ -240,7 +240,8 @@
 		ball_position.x = cnvs.width / 2;
 		ball_position.y = cnvs.height / 2;
 		ctx = cnvs.getContext('2d');
-		cnvs.addEventListener('mousemove', update_mouse)
+		cnvs.addEventListener('mousemove', update_mouse);
+		cnvs.addEventListener('touchmove', function(e){e.preventDefault();});
 		window.controls.addEventListener("submit", submit);
 		window.addEventListener('resize', winch);
 		winch();
