@@ -19,9 +19,9 @@
 	"use strict";
 
 	// default parameter values
-	var proportional_gain = .2;
-	var integral_gain = .15;
-	var derivative_gain = .03;
+	var proportional_gain = .25;
+	var integral_gain = 0.01;
+	var derivative_gain = 0.3;
 	var freq = 15;
 
 	var ctx;
@@ -34,42 +34,27 @@
 		}
 	}
 
-	var setpoint = {
-		'x': 0,
-		'y': 0
-	};
+	var setpoint, mouse, ball_position, ball_velocity, error, last_error, integral, num_past_errors, past_errors;
 
-	var mouse = {
-		'x': 0,
-		'y': 0
-	};
-
-	var ball_position = {
-		'x': 0,
-		'y': 0
-	};
-
-	var ball_velocity = {
-		'x': 0,
-		'y': 0
-	};
-
-	var error = {
-		'x': 0,
-		'y': 0
-	};
-
-	var last_error = {
-		'x': 0,
-		'y': 0
-	};
-
-	var sum_error = {
-		'x': 0,
-		'y': 0
-	};
-
-	var past_errors = [];
+	var reset = function(){
+		var middle = { 'x': cnvs_size('x')/2, 'y': cnvs_size('y')/2 };
+		setpoint = copy_2vec(middle);
+		mouse = { 'x': cnvs_size('x')/2 + 1, 'y': cnvs_size('y')/2 };
+		ball_position = copy_2vec(middle);
+		ball_velocity = { 'x': -0.01, 'y': 0.01 };
+		error = { 'x': 0, 'y': 0 };
+		last_error = { 'x': 0, 'y': 0 };
+		integral = { 'x': 0, 'y': 0 };
+		if(cnvs.width > cnvs.height){
+			num_past_errors = cnvs.width;
+		} else {
+			num_past_errors = cnvs.height;
+		}
+		past_errors = [];
+		for(var i = 0; i <= num_past_errors; i++){
+			past_errors.push({'x':0,'y':0});
+		}
+	}
 
 	var update_mouse = function(e) {
 		var x = 0;
@@ -98,18 +83,18 @@
 		setpoint = copy_2vec(mouse);
 		['x', 'y'].forEach(function(dim){
 			error[dim] = setpoint[dim] - ball_position[dim];
-			var velocity = proportional_gain * error[dim];
-			sum_error[dim] += error[dim];
-			velocity += integral_gain * sum_error[dim];
-			var error_slope = error[dim] - last_error[dim];
-			velocity += derivative_gain * error_slope;
-			ball_velocity[dim] = velocity;
+			integral[dim] = integral[dim] + error[dim]*freq
+			var derivative = (error[dim] - last_error[dim])/freq
+			var output = proportional_gain * error[dim]
+			output += integral_gain * integral[dim]
+			output += derivative_gain * derivative
 			last_error[dim] = error[dim];
+			ball_velocity[dim] = output;
 		});
 
 		// keep these for charting
 		past_errors.unshift(copy_2vec(error));
-		if (past_errors.length > cnvs.width && past_errors.length > cnvs.height) {
+		if (past_errors.length > num_past_errors) {
 			past_errors.pop();
 		}
 
@@ -133,8 +118,6 @@
 	};
 
 	var draw = function() {
-		var e, offset, _i, _j, _len, _len1;
-
 		ctx.clearRect(0, 0, cnvs.width, cnvs.height);
 		ctx.font = "16px sans-serif";
 
@@ -144,12 +127,10 @@
 		ctx.fillText("Time →", 10, 26);
 		ctx.beginPath();
 		ctx.moveTo(0, cnvs.height / 2);
-		offset = 0;
-		for (_i = 0, _len = past_errors.length; _i < _len; _i++) {
-			e = past_errors[_i];
-			ctx.lineTo(offset, (cnvs.height / 2) + e.y, 1, 1);
-			offset += 1;
-		}
+		var offset = 0;
+		past_errors.forEach(function(e, i){
+			ctx.lineTo(i, (cnvs.height / 2) + e.y, 1, 1);
+		});
 		ctx.stroke();
 
 
@@ -159,22 +140,19 @@
 		ctx.fillText("Time ↓", 10, 46);
 		ctx.beginPath();
 		ctx.moveTo(cnvs.width / 2, 0);
-		offset = 0;
-		for (_j = 0, _len1 = past_errors.length; _j < _len1; _j++) {
-			e = past_errors[_j];
-			ctx.lineTo((cnvs.width / 2) + e.x, offset, 1, 1);
-			offset += 1;
-		}
+		past_errors.forEach(function(e, i){
+			ctx.lineTo((cnvs.width / 2) + e.x, i, 1, 1);
+		});
+		ctx.stroke();
 
 		//draw red circle
-		ctx.stroke();
 		ctx.beginPath();
 		ctx.arc(ball_position.x, ball_position.y, 20, 0, Math.PI * 2, true);
 		ctx.closePath();
 		ctx.strokeStyle = 'black';
 		ctx.fillStyle = 'red';
 		ctx.fill();
-		return ctx.stroke();
+		ctx.stroke();
 	};
 
 	var update_vars = function() {
@@ -183,35 +161,7 @@
 			integral_gain = window.ibox.value;
 			derivative_gain = window.dbox.value;
 			freq = window.fbox.value;
-			setpoint = {
-				'x': 0,
-				'y': 0
-			};
-			mouse = {
-				'x': 0,
-				'y': 0
-			};
-			ball_position = {
-				'x': 0,
-				'y': 0
-			};
-			ball_velocity = {
-				'x': 0,
-				'y': 0
-			};
-			error = {
-				'x': 0,
-				'y': 0
-			};
-			last_error = {
-				'x': 0,
-				'y': 0
-			};
-			sum_error = {
-				'x': 0,
-				'y': 0
-			};
-			return past_errors = [];
+			reset();
 		}
 	};
 
@@ -222,7 +172,7 @@
 
 	var winch = function() {
 		cnvs.width = window.innerWidth;
-		cnvs.height = 500;
+		cnvs.height = window.innerHeight - document.getElementById('description-container').offsetHeight - window.controls.offsetHeight;
 		update_vars();
 	};
 
@@ -237,16 +187,15 @@
 		window.dbox.value = derivative_gain;
 		window.fbox.value = freq;
 		cnvs = document.getElementById('cnvs');
-		ball_position.x = cnvs.width / 2;
-		ball_position.y = cnvs.height / 2;
 		ctx = cnvs.getContext('2d');
+		reset();
 		cnvs.addEventListener('mousemove', update_mouse);
 		cnvs.addEventListener('touchmove', function(e){e.preventDefault();});
 		window.controls.addEventListener("submit", submit);
 		window.addEventListener('resize', winch);
 		winch();
 		window.requestAnimationFrame(world_tick);
-		return control_loop();
+		control_loop();
 	};
 
 }).call(this);
